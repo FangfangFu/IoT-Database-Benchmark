@@ -25,9 +25,14 @@ public class Query
         Sensor sensors = new Sensor();
         sensors.parseData();
         List<String> sensorIds = sensors.getIds();
-        List<String> sensorTypeIds = sensors.getTypeIds();
+        // List<String> sensorTypeIds = sensors.getTypeIds();
         List<String> locationIds = sensors.getInfraStructureIds();
-
+        
+        // parse sensorType file
+        SensorType sensorTypes = new SensorType();
+        sensorTypes.parseData();
+        List<String> sensorTypeIds = sensorTypes.getIds();
+   
         // parse observation file
         Observation observations = new Observation();
         observations.parseData();
@@ -57,7 +62,7 @@ public class Query
 
         // Space_to_Sensor(X, {locations}): List all sensor of type X that can observe Locations in {locations}.
         System.out.println();
-        int spaceSensorNum = 3; // <= 3 sensor Types
+        int spaceSensorNum = 3; // <= 6 sensor Types
         int spaceSensorSeed = 1;
         query.SpaceToSensorGenerator(sensorTypeIds, locationIds, spaceSensorSeed, spaceSensorNum);
 
@@ -76,7 +81,7 @@ public class Query
         /* Observations(X,<T1,T2>, Y, <Y_a, Y_b>): Select Observations of Sensors of type X between time range T1 and T2 
            and payload.Y in range (Y_a, Y_b) */
         System.out.println(); 
-        int observeNum3 = 3;   // <= 3 sensor Types
+        int observeNum3 = 3;   // <= 6 sensor Types
         int observeSeed3 = 1;
         query.ObservationOfSensorTypeGenerator(sensorTypeIds, timestamps, payloads, observeSeed3, observeNum3);
         
