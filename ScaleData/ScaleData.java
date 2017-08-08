@@ -1,6 +1,7 @@
 // Author: Fangfang Fu
 // Date: 8/2/2017
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -23,37 +24,40 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat; 
 
 public class ScaleData {
-
-	public static void main(String[] args) throws FileNotFoundException {
-		copyFile("temperatureObs.json");
-
+	public static String InputFilename = "temperatureObs.json";
+	public static String SimulatedFilename = "simulatedObs.json";
+	public static void main(String[] args) throws IOException {
+		copyFile();
+		Configure confi = new Configure();
+		confi.parseFile();
+		
         // temporal scaling -- where we extend the data from same sensors for a long time
-		int extendDays = 10;
+		int extendDays = confi.getTimeScaleNum();		
 		double timeScaleNoise = 0.25;
-		String filename1 = "simulatedTempObs1.json";
-		timeScale(timeScaleNoise, extendDays, filename1);
+		timeScale(timeScaleNoise, extendDays);
 		
 		// speed scaling -- where same devices generate data, but at a faster speed
-		int speedScaleNum = 10;
+		int speedScaleNum = confi.getSpeedScaleNum();		
 		double speedScaleNoise = 0.25;
-		String outputFilename = "simulatedTempObs2.json";
-		speedScale(speedScaleNum, speedScaleNoise, outputFilename);
+		speedScale(speedScaleNum, speedScaleNoise);
 		
 		// device scaling -- when we scale number of devices
-		int deviceScaleNum = 100;
+		int deviceScaleNum = confi.getDeviceScaleNum();		
 		String simulatedName = "simulatedEmeter"; 
 		double deviceScaleNoise = 0.25;
-		String outputfilename3 = "simulatedTempObs3.json";
-		deviceScale(deviceScaleNum, deviceScaleNoise, simulatedName, outputfilename3);
+		deviceScale(deviceScaleNum, deviceScaleNoise, simulatedName);
 		
+		System.out.println(extendDays);
+		System.out.println(speedScaleNum);
+		System.out.println(deviceScaleNum);
 		System.out.println("done");
 	}
 	
 	// Temporal scaling -- where we extend the data from same sensors for a long time
-	public static void timeScale(double timeScaleNoise, int extendDays, String outputFilename) throws FileNotFoundException {
+	public static void timeScale(double timeScaleNoise, int extendDays) throws FileNotFoundException {
 		// parse temperatureObs file
 		TemperatureObs temperatureObs = new TemperatureObs();
-		temperatureObs.parseData("simulatedObs.json");
+		temperatureObs.parseData(SimulatedFilename);
 		List<String> sensorTypeIds = temperatureObs.getTypeIds();
 		String sensorType = sensorTypeIds.get(0);
 		List<String> sensorIds = temperatureObs.getSensorIds();
@@ -67,7 +71,7 @@ public class ScaleData {
         // write data to file
         JsonWriter jsonWriter = null;
     	try {
-		  jsonWriter = new JsonWriter(new FileWriter("SimulatedData/" + outputFilename));
+		  jsonWriter = new JsonWriter(new FileWriter(SimulatedFilename));
 		  jsonWriter.setIndent("  ");
 		  jsonWriter.beginArray();
 		  
@@ -115,10 +119,10 @@ public class ScaleData {
 	
 	// Speed scaling -- where same devices generate data, but at a faster speed: keep original observations 
     // and add more between two nearby timestamps for each sensor
-	public static void speedScale(int speedScaleNum, double speedScaleNoise, String outputFilename) throws FileNotFoundException {
+	public static void speedScale(int speedScaleNum, double speedScaleNoise) throws FileNotFoundException {
 		// parse temperatureObs file
 		TemperatureObs temperatureObs = new TemperatureObs();
-		temperatureObs.parseData("simulatedTempObs1.json");
+		temperatureObs.parseData(SimulatedFilename);
 		List<String> sensorTypeIds = temperatureObs.getTypeIds();
 		String sensorType = sensorTypeIds.get(0);
 		List<String> sensorIds = temperatureObs.getSensorIds();
@@ -133,7 +137,7 @@ public class ScaleData {
         // write data to file
         JsonWriter jsonWriter = null;
     	try {
-		  jsonWriter = new JsonWriter(new FileWriter("SimulatedData/" + outputFilename));
+		  jsonWriter = new JsonWriter(new FileWriter(SimulatedFilename));
 		  jsonWriter.setIndent("  ");
 		  jsonWriter.beginArray();
 		  
@@ -184,10 +188,10 @@ public class ScaleData {
 	
 	
 	// device scaling -- when we scale number of devices
-	public static void deviceScale(int scaleNum, double deviceScaleNoise, String simulatedName, String outputFilename) throws FileNotFoundException {
+	public static void deviceScale(int scaleNum, double deviceScaleNoise, String simulatedName) throws FileNotFoundException {
 		// parse temperatureObs file
 		TemperatureObs temperatureObs = new TemperatureObs();
-		temperatureObs.parseData("simulatedTempObs1.json");
+		temperatureObs.parseData(SimulatedFilename);
 		List<String> sensorTypeIds = temperatureObs.getTypeIds();
 		String sensorType = sensorTypeIds.get(0);
 		List<String> sensorIds = temperatureObs.getSensorIds();
@@ -204,7 +208,7 @@ public class ScaleData {
 		// write data to file
         JsonWriter jsonWriter = null;
     	try {
-		  jsonWriter = new JsonWriter(new FileWriter("SimulatedData/" + outputFilename));
+		  jsonWriter = new JsonWriter(new FileWriter(SimulatedFilename));
 		  jsonWriter.setIndent("  ");
 		  jsonWriter.beginArray();
 		  
@@ -444,13 +448,13 @@ public class ScaleData {
 	}
 	
 	// Copy the original JSON file content into a new file
-	public static void copyFile(String filename) {
+	public static void copyFile() {
 		InputStream inStream = null;
 		OutputStream outStream = null;
 
     	try{
-    	    File originalfile =new File("POST/" + filename);
-    	    File newfile =new File("SimulatedData/simulatedObs.json");
+    	    File originalfile =new File(InputFilename);
+    	    File newfile =new File(SimulatedFilename);
 
     	    inStream = new FileInputStream(originalfile);
     	    outStream = new FileOutputStream(newfile);
@@ -476,8 +480,79 @@ public class ScaleData {
 	}
 }
 
+// Read configure.txt file
+class Configure {
+	private int timeScaleNum;
+	private int speedScaleNum;
+	private int deviceScaleNum;
+	
+	// Constructor
+	public Configure() {
+		this.timeScaleNum = 0;
+		this.speedScaleNum = 1;
+		this.deviceScaleNum = 1;
+	}
+	
+	// read lines number
+	private int countNumOfLines() throws IOException {
+		FileReader fileReader = new FileReader("configure.txt");
+		BufferedReader bf = new BufferedReader(fileReader);
+		
+		int numberOfLines = 0;
+		
+		while (bf.readLine() != null) {
+			numberOfLines++;
+		}	
+		bf.close();
+		
+		return numberOfLines;		
+	}
+	
+	// read configure.txt file and extract scale number
+	public void parseFile() throws IOException {
+		// read file to array
+		int numberOfLines = countNumOfLines();
+		FileReader fileReader = new FileReader("configure.txt");
+		BufferedReader bf = new BufferedReader(fileReader);
+		String[] textData = new String[numberOfLines];
+		
+		for (int i = 0; i < numberOfLines; ++i) {
+			textData[i] = bf.readLine();
+			String[] result = textData[i].split(":\\s");
+			
+			if (result[0].equals("timeScaleNum")) {
+				this.timeScaleNum = Integer.parseInt(result[1]);
+			}
+			
+			if (result[0].equals("speedScaleNum")) {
+				this.speedScaleNum = Integer.parseInt(result[1]);
+			}
+			
+			if (result[0].equals("deviceScaleNum")) {
+				this.deviceScaleNum = Integer.parseInt(result[1]);
+			}
+		}
+		
+		bf.close();	
+	}
+	
+	public int getTimeScaleNum() {
+		return this.timeScaleNum;
+	}
+	
+	public int getSpeedScaleNum() {
+		return this.speedScaleNum;
+	}
+	
+	public int getDeviceScaleNum() {
+		return this.deviceScaleNum;
+	}
+	
+}
+
+
 // Obs read class for GSON
-class Obs{
+class Obs {
 	private String typeId;
 	private String timestamp;
 	private JSONObject payload;
@@ -543,7 +618,7 @@ class TemperatureObs
         JSONArray observations = new JSONArray();
         try {
             JSONParser parser = new JSONParser();
-            observations = (JSONArray) parser.parse(new FileReader("SimulatedData/" + filename));
+            observations = (JSONArray) parser.parse(new FileReader(filename));
         } catch (FileNotFoundException ex) {
         	System.out.println (ex.toString());
             System.err.println("File not found");
