@@ -9,7 +9,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-// Sensor Type Object to extract the sensor type information
+// Parse sensorType.json file to extract the sensor type information
 public class SensorType {
 	private List<String> ids;
 

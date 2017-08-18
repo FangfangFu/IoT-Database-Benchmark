@@ -1,6 +1,7 @@
 import java.time.LocalDate;
 import java.util.List;
 
+// This class includes all templates
 public class QueryTemplate 
 {
 	// Select_Sensor(X):  Select a sensor with id X

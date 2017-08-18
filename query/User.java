@@ -9,6 +9,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+// Parse user.json file
 public class User {
 	private List<String> ids;
 
@@ -39,7 +40,9 @@ public class User {
         for (Object obj : users) {
             JSONObject user = (JSONObject) obj;
             String id = (String) user.get("id");
-            this.ids.add(id);
+            if (!id.equals("admin")) {
+            	this.ids.add(id);
+            } 
         }
     }
     

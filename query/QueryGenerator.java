@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import java.time.LocalDate;
 
+// Query generator class
 public class QueryGenerator 
 {
 	private QueryTemplate template;

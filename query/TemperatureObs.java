@@ -9,12 +9,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+// Parse temperatureObs.json file
 public class TemperatureObs 
 {
 	private List<String> typeIds;
 	private List<String> timestamps;
 	private List<Integer> payloads;
 	
+	// Constructor
 	public TemperatureObs() {
 		this.typeIds = new ArrayList<String>();
 		this.timestamps = new ArrayList<String>();
